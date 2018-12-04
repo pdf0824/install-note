@@ -72,4 +72,20 @@ docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}"
 
 8. 删除镜像: `docker rmi xx` (xx可以是id、名称)
 
-9. 
+# Build: 创建一个镜像
+
+1. `docker pull busybox` 直接从仓库拉取一个镜像
+
+2. 导入镜像:
+```shell
+# 1、 docker load
+#   docker load 只适用于适用 docker save 导出的镜像，导入后的镜像跟源镜像一模一样，拥有相同的镜像ID和分层内容，下面两条命令可以导出和导入:
+docker save -o busybox.tar busybox
+docker load -i busybox.tar
+
+# 2、 docker import
+#   docker import 不能用于导入标准的Docker镜像，而是用于导入包含根文件系统的归档，并将之变为docker镜像
+
+```
+
+3. `docker commit container` 用于将容器提交为一个镜像，如果没有指定镜像名称，则会形成 '悬挂' 镜像
