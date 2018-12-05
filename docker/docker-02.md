@@ -33,3 +33,28 @@ Options:
 
 可以使用 `docker system df` 镜像、容器、数据卷占用大小：
 ![docker system df](./image/docker_system_df.png)
+
+### 虚悬镜像(`dangling image`)
+虚悬镜像是一种特殊的镜像，没有仓库名也没有标签，均为`<none>`:
+- `docker pull` 可能产生虚悬镜像，一开始下载一个镜像标签为3.2，随着官方维护，发布新的版本，重新pull 3.2的时候，镜像名被转移到了新下载的镜像中，从而成为了`<none>`
+
+- `docker build` 和 `docker commit` 同样可能产生虚悬镜像
+
+可以使用下面的命令找出所有的虚悬镜像:
+```shell
+docker image ls -f dangling=true
+```
+
+由于虚悬镜像完全没有用，可以使用下面的命令删除:
+```shell
+docker image prune
+```
+
+### 中间层镜像
+使用下面命令可以看到很多没有标签的镜像:
+```shell
+docker image ls -a
+```
+
+这是因为Docker加速镜像构建，重复利用资源所利用的中间层镜像，这些是不能被删除的，因为这些是被上层依赖的
+
