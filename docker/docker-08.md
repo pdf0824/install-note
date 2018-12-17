@@ -41,3 +41,81 @@ ENTRYPOINT在运行时也可以被取代，不过要通过`docker run --entrypoi
 
 当指定了`ENTRYPOINT`之后，`CMD`的含义变为了`ENTRYPOINT`的参数。
 
+## VOLUME 定义匿名卷
+
+格式为:
+
+- VOLUME ["<路径1>", "<路径2>", ...]
+- VOLUME <路径>
+
+为了不将外部存储的数据写入到容器中，保持容器的无状态化，可以定义一些匿名卷，比如：
+
+```shell
+VOLUME /data
+```
+
+这样在任何情况下，写入到 `/data` 目录下的信息都不会记入进容器的存储层，从而保持了容器的无状态化，在容器运行时，可以覆盖此值，比如：
+
+```shell
+docker run -d -v mydata:/data xxx
+```
+
+这样 `mydata` 就代替了Dockerfile中定义的匿名卷`/data`。
+
+## EXPOSE 声明端口
+
+EXPOSE 仅仅只是声明容器可能打算使用这些端口，这样有这几个好处：
+
+- 帮助镜像使用者理解这个镜像的守护端口
+- 另一个用处则是在运行时使用随机端口映射时,也就是 `docker run -P`
+时,会自动随机映射 `EXPOSE` 的端口。
+
+
+## WORKDIR 指定工作目录
+
+每一个指令相当于一层，每一层之间互不干扰，所以有些命令会理解错误导致失败，比如：
+
+```shell
+RUN cd /app
+RUN echo "hello world" > world.txt
+```
+
+然后你会发现，在容器内，根本找不到 `/app/world.txt` 文件，这就是因为两个指令相处的环境是不一样的，第一个指令和第二个指令并没有关系，这个时候就应该指定工作目录。
+
+## USER 指定用户
+
+格式： `USER <用户名>[:<用户组>]`
+
+USER命令改变在其之后的指令的执行身份。
+
+## HEALTHCHECK 健康检查
+
+格式：
+
+- `HEALTHCHECK [选项] CMD [命令]` ：设置健康检查的命令
+- `HEALTHCHECK NONE` : 如果基础镜像有健康检查指令，使用此命令可以屏蔽
+
+当在一个镜像指定了 HEALTHCHECK 指令后,用其启动容器,初始状态会为
+starting ,在 HEALTHCHECK 指令检查成功后变为 healthy ,如果连续一定次数失败,则会变为 unhealthy 。
+
+`HEALTHCHECK` 支持以下选项:
+
+- `--interval=<间隔>`: 两次健康检查的时间间隔，默认30s
+- `--timeout=<间隔>`: 健康检查的超时时间，超出后视为失败，默认30s
+- `--retries=<次数>`: 当连续失败指定次数之后，状态变为 `unhealthy`，默认3次。
+
+在 `HEALTHCHECK [选项] CMD [命令]` 中CMD后面，也是分为shell格式和exec格式，命令的返回值决定这次检查的成功或者是失败。0是成功，1是失败，2是保留不使用这个值。
+
+为了排除故障，健康检查的输出(stdout、stderr)都会存在健康状态里面，可以使用 `docker inspect` 来查看:
+
+```shell
+docker inspect --format '{{json .State.Health}}' web|python -m json.tool
+```
+
+## ONBUILD 为他人做嫁衣裳
+
+这个命令后面跟的指令在构建时并不会执行，但是当别人以此命令为基础命令进行构建时就会执行。
+
+
+
+
